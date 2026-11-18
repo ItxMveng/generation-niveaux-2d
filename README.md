@@ -4,7 +4,7 @@ Projet IAS — Victor Francis Itoua Mveng — travail individuel.
 
 ## Objectif
 
-Générer des niveaux de jeu de plateforme sous forme de grilles de tuiles, puis comparer une méthode constructive à une méthode de recherche. Le projet porte sur les décors et le placement des éléments : créer un jeu complet n'est pas nécessaire.
+Générer des niveaux de jeu de plateforme sous forme de grilles de tuiles, puis comparer une méthode constructive à une méthode de recherche. Le projet porte sur les décors et le placement des éléments.
 
 ## Approche prévue
 
