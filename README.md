@@ -18,7 +18,11 @@ Le projet utilise Python et sa bibliothèque standard. Le rendu SVG s'ouvre dans
 
 ## État actuel
 
-Un premier niveau fixe est représenté par une grille et affiché en texte et en SVG. Le générateur et la vérification des chemins restent à réaliser.
+- Grille de tuiles et exemple fixe.
+- Générateur constructif reproductible : plateaux de 3 à 6 colonnes (le dernier peut être plus court), variations de hauteur limitées à une case, trous de taille bornée.
+- Quatre colonnes sans trou aux deux extrémités, départ et arrivée posés sur le sol.
+- Affichage texte, rendu SVG et export JSON de la grille et des paramètres.
+- La vérification des chemins et la recherche locale restent à réaliser.
 
 ## Exécution
 
@@ -26,10 +30,22 @@ Python 3.10 ou plus récent. Depuis le dossier du projet :
 
 ```sh
 python main.py
+python main.py --graine 17 --largeur 48 --trou-max 2 --sortie sorties/terrain-17.svg
+python main.py --exemple --sortie sorties/exemple.svg
 python -m unittest discover -s tests -v
 ```
 
 Ouvrir ensuite `sorties/niveau.svg` dans un navigateur. `D` indique le départ, `A` l'arrivée, `#` le sol et `.` le vide.
+
+Le JSON associé conserve la grille et les paramètres. À code et paramètres identiques, une même graine reproduit le même niveau. Les sorties générées ne sont pas suivies par Git.
+
+## Organisation du code
+
+- `main.py` : paramètres en ligne de commande et enregistrement des fichiers.
+- `niveaux/grille.py` : représentation et vérification de la structure de la grille.
+- `niveaux/generation.py` : règles de construction du terrain.
+- `niveaux/rendu.py` : dessin du niveau en SVG.
+- `tests/` : contrôles de structure, de reproductibilité et des règles de génération.
 
 ## Limites à examiner
 
