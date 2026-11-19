@@ -14,11 +14,22 @@ Générer des niveaux de jeu de plateforme sous forme de grilles de tuiles, puis
 4. Ajouter une recherche locale pour améliorer les niveaux selon des critères mesurables.
 5. Comparer les méthodes sur les mêmes conditions d'évaluation et présenter plusieurs niveaux commentés.
 
-Python est retenu pour une première version simple à lire et à exécuter. Les premières étapes utiliseront la bibliothèque standard. Le choix d'une bibliothèque d'affichage viendra après la représentation des niveaux.
+Le projet utilise Python et sa bibliothèque standard. Le rendu SVG s'ouvre dans un navigateur, sans installation supplémentaire.
 
 ## État actuel
 
-Cadrage uniquement : aucun générateur ni résultat expérimental n'est encore disponible. Il n'y a pas encore de commande d'exécution.
+Un premier niveau fixe est représenté par une grille et affiché en texte et en SVG. Le générateur et la vérification des chemins restent à réaliser.
+
+## Exécution
+
+Python 3.10 ou plus récent. Depuis le dossier du projet :
+
+```sh
+python main.py
+python -m unittest discover -s tests -v
+```
+
+Ouvrir ensuite `sorties/niveau.svg` dans un navigateur. `D` indique le départ, `A` l'arrivée, `#` le sol et `.` le vide.
 
 ## Limites à examiner
 
@@ -26,6 +37,6 @@ Un niveau visuellement cohérent n'est pas nécessairement franchissable. La vé
 
 ## Assistance et sources
 
-Une assistance IA a été utilisée pour le cadrage et la rédaction initiale.
+Une assistance IA est utilisée pour le cadrage, la rédaction et le développement.
 
 Le cadrage repose sur le sujet « IAS — Platform level Generation » et les consignes générales fournis par l'équipe enseignante. Les ressources externes effectivement utilisées seront référencées avec leur licence.
