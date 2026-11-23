@@ -91,3 +91,13 @@ Les résultats détaillés sont enregistrés dans `sorties/comparaison/resultats
 | Temps moyen par terrain, évaluation comprise | 0,64 ms | 59,18 ms au total |
 
 Les 50 scores augmentent, de 36,68 points en moyenne. La diversité est la proportion moyenne de colonnes différentes entre deux profils, trous inclus (1 225 paires). Elle baisse légèrement. Les temps viennent d'un seul passage sur la machine de développement et varient selon la machine. Le score optimisé n'est pas une mesure du plaisir de jeu. Une seule graine de recherche et une seule configuration ont été étudiées : ces résultats ne garantissent pas le même comportement partout.
+
+## Quelques niveaux retenus
+
+Les colonnes ci-dessous sont comptées de 1 à 40. Les exemples utilisent le budget 200 et la graine de recherche 0.
+
+- **105** : deux trous de deux colonnes, en 13–14 et 23–24, avec de larges appuis entre eux. Les changements de hauteur passent de 4 à 7. Ce niveau montre une amélioration discrète d’un terrain déjà bien noté (86,21 → 97,88). La réception après le premier trou est surélevée et le plateau final reste long.
+- **117** : des terrasses et un troisième trou ajouté en colonne 26. Le plateau maximal passe de 18 à 11 colonnes (60,12 → 97,81). Ce cas illustre une transformation intermédiaire, mais la coupure supplémentaire peut demander davantage d’attention au joueur.
+- **143** : un plateau initial de 32 colonnes, réduit à 11 au maximum après recherche (22,05 → 97,81). La transformation est visible ; les trous des colonnes 8 et 10 ne sont toutefois séparés que par une colonne solide. Un grand gain de score ne garantit donc pas un passage confortable.
+
+Pour reproduire un exemple : `python main.py --graine 105 --ameliorer --budget 200 --graine-recherche 0 --sortie sorties/graine-105.svg`. Retirer `--ameliorer` permet de voir le terrain initial. Pour jouer les trois : `python jouer.py --graines 105 117 143 --sortie sorties/selection.html`.
