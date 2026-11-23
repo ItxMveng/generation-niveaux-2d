@@ -50,6 +50,12 @@ def generer(parametres: Parametres):
                 x += trou
 
     profil[fin:] = [surface] * 4
+    return niveau_depuis_profil(profil, hauteur)
+
+
+def niveau_depuis_profil(profil, hauteur):
+    """Transformer un profil avec extrémités solides en grille de terrain."""
+    largeur = len(profil)
     grille = [[VIDE] * largeur for _ in range(hauteur)]
     for colonne, sol in enumerate(profil):
         if sol is not None:
