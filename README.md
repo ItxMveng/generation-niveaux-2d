@@ -70,4 +70,4 @@ Le déplacement est discret, sans inertie ; la recherche peut stagner. Le score 
 
 ## Sources et assistance
 
-Sujet « IAS — Platform level Generation », Anne-Gwenn Bosser, et consignes du module. Interface adaptée de ma maquette ; décors dessinés dans le projet. Une assistance IA est utilisée pour le cadrage, la rédaction et le développement. Les critères peuvent réduire la variété ; la sélection reste humaine. Le jeu ne collecte pas de données personnelles.
+Sujet « IAS — Platform level Generation », Anne-Gwenn Bosser, et consignes du module. Interface adaptée de ma maquette ; décors dessinés dans le projet. Une assistance IA est utilisée pour la rédaction.
