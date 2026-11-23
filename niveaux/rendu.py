@@ -3,9 +3,10 @@
 from html import escape
 
 from niveaux.grille import ARRIVEE, DEPART, SOL, Niveau
+from niveaux.parcours import Parcours
 
 
-def rendre_svg(niveau: Niveau, titre="Niveau de plateforme"):
+def rendre_svg(niveau: Niveau, titre="Niveau de plateforme", parcours: Parcours | None = None):
     taille = 28
     marge = 32
     haut = 100
@@ -22,6 +23,10 @@ def rendre_svg(niveau: Niveau, titre="Niveau de plateforme"):
         f'<text x="32" y="82" font-size="12" fill="#60776f">{niveau.largeur} colonnes × {niveau.hauteur} lignes</text>',
         f'<rect x="{marge}" y="{haut}" width="{niveau.largeur * taille}" height="{niveau.hauteur * taille}" fill="#dcefe9"/>',
     ]
+    if parcours is not None and parcours.chemin:
+        points = " ".join(f"{marge + x * taille + 14},{haut + y * taille + 14}"
+                          for x, y, _ in parcours.chemin)
+        elements.append(f'<polyline points="{points}" fill="none" stroke="#347ab1" stroke-width="3" stroke-dasharray="5 4" opacity="0.7"/>')
     for y, ligne in enumerate(niveau.lignes):
         for x, tuile in enumerate(ligne):
             px, py = marge + x * taille, haut + y * taille
@@ -36,9 +41,15 @@ def rendre_svg(niveau: Niveau, titre="Niveau de plateforme"):
                     f'<text x="{px + 14}" y="{py + 19}" text-anchor="middle" font-size="13" font-weight="700" fill="white">{tuile}</text>',
                 ])
     bas = haut + niveau.hauteur * taille
+    statut = "Vue du terrain — franchissabilité non vérifiée"
+    if parcours is not None:
+        statut = ("Accessible" if parcours.accessible else "Inaccessible")
+        statut += f" selon le modèle discret · saut de {parcours.hauteur_saut} cases"
+        if parcours.accessible:
+            statut += f" · {len(parcours.chemin) - 1} étapes"
     elements.extend([
         f'<text x="32" y="{bas + 29}" font-size="12">D · Départ     A · Arrivée     ■ Sol</text>',
-        f'<text x="32" y="{bas + 50}" font-size="11" fill="#60776f">Vue du terrain — franchissabilité non vérifiée</text>',
+        f'<text x="32" y="{bas + 50}" font-size="11" fill="#60776f">{escape(statut)}</text>',
         '</g></svg>',
     ])
     return "\n".join(elements)

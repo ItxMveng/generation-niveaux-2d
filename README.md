@@ -22,7 +22,9 @@ Le projet utilise Python et sa bibliothèque standard. Le rendu SVG s'ouvre dans
 - Générateur constructif reproductible : plateaux de 3 à 6 colonnes (le dernier peut être plus court), variations de hauteur limitées à une case, trous de taille bornée.
 - Quatre colonnes sans trou aux deux extrémités, départ et arrivée posés sur le sol.
 - Affichage texte, rendu SVG et export JSON de la grille et des paramètres.
-- La vérification des chemins et la recherche locale restent à réaliser.
+- Recherche de chemin avec marche, saut et chute dans un modèle discret.
+- Chemin visible en pointillés dans le SVG et enregistré dans le JSON.
+- La fonction de qualité, la recherche locale et la comparaison restent à réaliser.
 
 ## Exécution
 
@@ -32,6 +34,7 @@ Python 3.10 ou plus récent. Depuis le dossier du projet :
 python main.py
 python main.py --graine 17 --largeur 48 --trou-max 2 --sortie sorties/terrain-17.svg
 python main.py --exemple --sortie sorties/exemple.svg
+python main.py --graine 42 --saut 1 --sortie sorties/saut-1.svg
 python -m unittest discover -s tests -v
 ```
 
@@ -45,11 +48,16 @@ Le JSON associé conserve la grille et les paramètres. À code et paramètres i
 - `niveaux/grille.py` : représentation et vérification de la structure de la grille.
 - `niveaux/generation.py` : règles de construction du terrain.
 - `niveaux/rendu.py` : dessin du niveau en SVG.
+- `niveaux/parcours.py` : déplacements possibles et recherche de chemin en largeur.
 - `tests/` : contrôles de structure, de reproductibilité et des règles de génération.
 
 ## Limites à examiner
 
-Un niveau visuellement cohérent n'est pas nécessairement franchissable. La vérification dépendra d'hypothèses explicites sur les déplacements ; elle ne prouvera pas la jouabilité dans un moteur physique complet. Une note automatique ne mesure pas à elle seule le plaisir de jeu.
+Le personnage occupe une case. Au sol, il peut marcher d'une case à gauche ou à droite, ou sauter. Le saut monte d'une case par étape pendant la hauteur choisie (`--saut`, 2 par défaut), puis le personnage descend d'une case par étape. En l'air, il peut se déplacer horizontalement de -1, 0 ou +1 case à chaque étape. Un plafond interrompt la montée. Les blocs et les coins des blocs ne peuvent pas être traversés ; un nouveau saut exige du sol sous les pieds. Sortir de la grille est interdit et son bord inférieur ne sert pas de sol.
+
+Le départ et l'arrivée doivent être posés sur le sol. Le parcours en largeur trouve un chemin minimal en nombre de transitions, s'il existe. Le JSON version 2 conserve le modèle, la hauteur de saut, les états `(x, y, montée restante)`, le nombre d'états explorés et la conclusion. Un terrain inaccessible reste exporté pour pouvoir l'analyser.
+
+« Accessible » signifie accessible selon ce modèle simplifié : il n'y a ni accélération, ni inertie, ni limite de chute ou vitesse horizontale continue. Cela ne prouve pas la jouabilité dans un moteur physique complet. Une note automatique ne mesure pas non plus le plaisir de jeu.
 
 ## Assistance et sources
 
