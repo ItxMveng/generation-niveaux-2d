@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Les sentiers — Jeu de plateforme</title>
+  <style>/*STYLE*/</style>
+</head>
+<body>
+  <main>
+    <header class="entete"><a href="#" class="marque" aria-label="Les sentiers, accueil">↟ <span>LES SENTIERS</span></a><span class="etiquette">Une petite aventure de plateforme</span></header>
+    <section class="introduction"><div><p class="surtitre">EXPLORER · SAUTER · RECOMMENCER</p><h1>Un pas après l’autre.</h1><p>Rejoins le drapeau. Quelques éclats dorés t’attendent en chemin.</p></div><div class="signature">Terrains générés<br><strong>Aventure à ton rythme</strong></div></section>
+    <section class="jeu" aria-label="Jeu de plateforme">
+      <div class="barre"><div><span id="numero" class="surtitre"></span><h2 id="nom"></h2></div><div class="compteurs"><span>Éclats <strong id="fragments">0 / 3</strong></span><span>Essai <strong id="essais">1</strong></span><span>Temps <strong id="temps">0:00</strong></span></div></div>
+      <div class="scene"><canvas id="terrain" tabindex="0" aria-label="Terrain de jeu. Flèches pour avancer, espace pour sauter, R pour recommencer."></canvas>
+        <div id="voile" class="voile"><div class="carte"><span class="badge" id="badge">À TOI DE JOUER</span><h2 id="titre-voile">Le sentier t’attend.</h2><p id="texte-voile">Avance avec les flèches et saute avec Espace. Les éclats sont facultatifs.</p><button id="action" class="primaire">Commencer la traversée <span>→</span></button></div></div>
+      </div>
+      <div class="progression" role="progressbar" aria-label="Progression vers l’arrivée" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span id="progression"></span></div>
+      <div class="outils"><div class="touches"><span><kbd>←</kbd><kbd>→</kbd> avancer</span><span><kbd>Espace</kbd> sauter</span><span><kbd>R</kbd> reprendre</span></div><div class="actions"><button id="aide" aria-pressed="false">Afficher le chemin</button><button id="pause">Pause</button><button id="recommencer">Recommencer</button></div></div>
+      <div class="tactile" aria-label="Commandes tactiles"><button id="gauche" aria-label="Aller à gauche">←</button><button id="droite" aria-label="Aller à droite">→</button><button id="sauter">Sauter ↑</button></div>
+    </section>
+    <section class="bas"><div><h3>Choisis ta traversée</h3><nav id="niveaux" aria-label="Choisir un niveau"></nav></div><p id="message" role="status" aria-live="polite">Prends ton temps : tu peux recommencer autant de fois que tu veux.</p></section>
+    <footer>Un projet de Victor Francis Itoua Mveng <span>Clavier et commandes tactiles · Sans installation</span></footer>
+  </main>
+  <script id="donnees" type="application/json">/*DONNEES*/</script>
+  <script>/*MOTEUR*/</script>
+  <script>/*INTERFACE*/</script>
+</body>
+</html>

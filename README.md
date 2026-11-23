@@ -4,78 +4,66 @@ Projet IAS — Victor Francis Itoua Mveng — travail individuel.
 
 ## Objectif
 
-Générer des niveaux de jeu de plateforme sous forme de grilles de tuiles, puis comparer une méthode constructive à une méthode de recherche. Le projet porte sur les décors et le placement des éléments.
+Construire des niveaux de plateforme 2D, vérifier leur accessibilité et comparer une méthode constructive à une recherche locale. Une petite version jouable permet aussi d'essayer les terrains.
 
-## Approche prévue
+## Lancer le jeu
 
-1. Représenter un niveau par une grille et produire un premier exemple fixe.
-2. Générer des niveaux avec des règles explicites et une graine aléatoire reproductible.
-3. Définir un modèle simplifié de déplacement et vérifier l'existence d'un chemin du départ à l'arrivée.
-4. Ajouter une recherche locale pour améliorer les niveaux selon des critères mesurables.
-5. Comparer les méthodes sur les mêmes conditions d'évaluation et présenter plusieurs niveaux commentés.
-
-Le projet utilise Python et sa bibliothèque standard. Le rendu SVG s'ouvre dans un navigateur, sans installation supplémentaire.
-
-## État actuel
-
-- Grille de tuiles et exemple fixe.
-- Générateur constructif reproductible : plateaux de 3 à 6 colonnes (le dernier peut être plus court), variations de hauteur limitées à une case, trous de taille bornée.
-- Quatre colonnes sans trou aux deux extrémités, départ et arrivée posés sur le sol.
-- Affichage texte, rendu SVG et export JSON de la grille et des paramètres.
-- Recherche de chemin avec marche, saut et chute dans un modèle discret.
-- Chemin visible en pointillés dans le SVG et enregistré dans le JSON.
-- Mesures du terrain et score de construction détaillé, avec accessibilité obligatoire.
-- Recherche locale reproductible, avec historique des améliorations et rejet des terrains inaccessibles.
-- La comparaison sur plusieurs graines reste à réaliser.
-
-## Exécution
-
-Python 3.10 ou plus récent. Depuis le dossier du projet :
+Python 3.10 ou plus récent et un navigateur récent. Aucune bibliothèque externe à installer.
 
 ```sh
-python main.py
-python main.py --graine 17 --largeur 48 --trou-max 2 --sortie sorties/terrain-17.svg
-python main.py --exemple --sortie sorties/exemple.svg
-python main.py --graine 42 --saut 1 --sortie sorties/saut-1.svg
-python main.py --ameliorer --budget 200 --graine-recherche 0 --sortie sorties/ameliore.svg
-python -m unittest discover -s tests -v
+python jouer.py --ouvrir
 ```
 
-Ouvrir ensuite `sorties/niveau.svg` dans un navigateur. `D` indique le départ, `A` l'arrivée, `#` le sol et `.` le vide.
+La commande génère trois terrains améliorés et ouvre `sorties/jeu.html`. Ce fichier contient tout le jeu et fonctionne ensuite hors ligne. Sans `--ouvrir`, il suffit de l'ouvrir manuellement.
 
-Le JSON associé conserve la grille et les paramètres. À code et paramètres identiques, une même graine reproduit le même niveau. Les sorties générées ne sont pas suivies par Git.
+- Flèches ou Q/D : avancer ; Espace ou flèche haute : sauter.
+- R : recommencer ; Échap : mettre en pause.
+- Rejoindre le drapeau orange pour terminer chaque traversée.
+- Trois éclats facultatifs à récupérer par terrain.
+- Boutons tactiles et aide pour afficher un chemin possible.
 
-## Organisation du code
+Les trois graines par défaut sont 42, 17 et 7. Pour choisir d'autres terrains : `python jouer.py --graines 42 17 --budget 200`. Une graine inaccessible est refusée avec un message, sans être remplacée silencieusement.
 
-- `main.py` : paramètres en ligne de commande et enregistrement des fichiers.
-- `niveaux/grille.py` : représentation et vérification de la structure de la grille.
-- `niveaux/generation.py` : règles de construction du terrain.
-- `niveaux/rendu.py` : dessin du niveau en SVG.
-- `niveaux/parcours.py` : déplacements possibles et recherche de chemin en largeur.
-- `niveaux/evaluation.py` : mesures de surface et score de construction.
-- `niveaux/recherche.py` : modifications locales et conservation des gains de score.
-- `tests/` : contrôles de structure, de reproductibilité et des règles de génération.
+## Générer et analyser un terrain
 
-## Évaluation
+```sh
+python main.py --graine 42 --sortie sorties/avant.svg
+python main.py --graine 42 --ameliorer --budget 200 --graine-recherche 0 --sortie sorties/apres.svg
+python main.py --exemple --sortie sorties/exemple.svg
+```
 
-La recherche modifie une à trois colonnes centrales : monter, descendre, creuser ou combler. Elle conserve les quatre colonnes de chaque extrémité, les limites de hauteur, l'écart maximal d'une case entre surfaces solides successives et la taille maximale des trous. Elle peut créer des plateaux plus courts que ceux du générateur initial. Chaque proposition valide est évaluée ; seules les améliorations strictes accessibles sont gardées. Le budget compte toutes les propositions, y compris celles rejetées. Le terrain initial doit déjà être accessible. La méthode peut rester bloquée et ne garantit pas le meilleur terrain possible.
+Le terminal, le SVG et le JSON présentent le terrain, son chemin et ses mesures. Le JSON version 4 conserve les paramètres, la version du score, les rejets et l'historique des améliorations. Les sorties sont exclues de Git.
 
-Le score `construction-v1` privilégie 10 % de colonnes sans sol, 20 % de changements de hauteur parmi les paires de colonnes adjacentes solides et un plateau maximal d'au plus 30 % de la largeur. Les poids sont respectivement 35 %, 35 % et 30 %.
+## Méthodes
 
-Pour les deux premières composantes : `max(0, 1 - abs(valeur - cible) / cible)`. La troisième vaut 1 jusqu'à la limite de 30 %, puis décroît linéairement jusqu'à 0 pour un terrain entièrement plat. La somme pondérée est ramenée sur 100. Le score final vaut `null` si l'arrivée est inaccessible ; le score de structure est conservé pour diagnostiquer le terrain.
+Le générateur construit des plateaux de 3 à 6 colonnes, parfois raccourcis à la fin, et des trous bornés. Les surfaces solides successives diffèrent d'au plus une case. Quatre colonnes plates sont réservées à chaque extrémité.
 
-Ces cibles sont des choix de conception initiaux, pas des valeurs apprises ni une mesure du plaisir de jeu. Les mesures utilisent la première case solide de chaque colonne : elles décrivent le terrain constructif, mais résument imparfaitement des plateformes superposées. Elles ne mesurent pas la diversité entre plusieurs niveaux.
+Le validateur utilise un parcours en largeur sur des états `(x, y, montée restante)`. Le personnage occupe une case, marche au sol, monte pendant deux étapes par défaut, puis descend. En l'air, le déplacement horizontal vaut -1, 0 ou +1 case. Les blocs et leurs coins ne peuvent pas être traversés, et un nouveau saut exige un support. Le jeu utilise les transitions exportées par ce même validateur : ses déplacements ne reposent pas sur un second moteur physique.
 
-## Limites à examiner
+La recherche locale modifie une à trois colonnes centrales : monter, descendre, creuser ou combler. Elle conserve les extrémités, les limites de hauteur et de trous. Elle peut créer des plateaux plus courts que le générateur initial. Seuls les gains stricts de score sur des terrains accessibles sont acceptés. Le budget compte toutes les propositions. Le terrain initial doit être accessible.
 
-Le personnage occupe une case. Au sol, il peut marcher d'une case à gauche ou à droite, ou sauter. Le saut monte d'une case par étape pendant la hauteur choisie (`--saut`, 2 par défaut), puis le personnage descend d'une case par étape. En l'air, il peut se déplacer horizontalement de -1, 0 ou +1 case à chaque étape. Un plafond interrompt la montée. Les blocs et les coins des blocs ne peuvent pas être traversés ; un nouveau saut exige du sol sous les pieds. Sortir de la grille est interdit et son bord inférieur ne sert pas de sol.
+## Évaluation et limites
 
-Le départ et l'arrivée doivent être posés sur le sol. Le parcours en largeur trouve un chemin minimal en nombre de transitions, s'il existe. Le JSON version 4 conserve le modèle, la hauteur de saut, les états `(x, y, montée restante)`, les mesures et les scores. En mode recherche, il ajoute le budget, la graine, les rejets et l'historique des gains. Un terrain inaccessible reste exporté en mode constructif ; la recherche refuse un tel point de départ.
+Le score `construction-v1` vise 10 % de colonnes sans sol, 20 % de changements parmi les paires de colonnes voisines solides et un plateau maximal d'au plus 30 % de la largeur. Les poids sont 35 %, 35 % et 30 %. Pour les deux premières composantes : `max(0, 1 - abs(valeur - cible) / cible)`. La dernière vaut 1 jusqu'à 30 %, puis décroît jusqu'à 0 pour un terrain entièrement plat. La somme pondérée est ramenée sur 100.
 
-« Accessible » signifie accessible selon ce modèle simplifié : il n'y a ni accélération, ni inertie, ni limite de chute ou vitesse horizontale continue. Cela ne prouve pas la jouabilité dans un moteur physique complet. Une note automatique ne mesure pas non plus le plaisir de jeu.
+L'accessibilité est obligatoire : le score final vaut `null` si aucun chemin n'existe. Ces cibles sont des choix de conception, pas une mesure du plaisir de jeu. Le profil ne décrit que la plateforme la plus haute de chaque colonne. Le modèle de déplacement n'a ni inertie ni accélération ; la recherche peut stagner et ne garantit pas un optimum global. La comparaison sur plusieurs graines reste à réaliser.
 
-## Assistance et sources
+## Code et tests
 
-Une assistance IA est utilisée pour le cadrage, la rédaction et le développement.
+- `main.py`, `jouer.py` : commandes d'analyse et d'export du jeu.
+- `niveaux/` : grille, génération, parcours, évaluation, recherche, rendu et export.
+- `jeu/` : interface HTML/CSS et moteur JavaScript.
+- `tests/` : contrôles des règles, des scores et des déplacements.
 
-Le cadrage repose sur le sujet « IAS — Platform level Generation » et les consignes générales fournis par l'équipe enseignante. Les ressources externes effectivement utilisées seront référencées avec leur licence.
+```sh
+python -m unittest discover -s tests -v
+python jouer.py
+node tests/test_moteur.js sorties/jeu.html
+node tests/test_interface.js sorties/jeu.html
+```
+
+Node.js sert uniquement aux deux tests JavaScript. Le jeu se lance sans Node. Le test d'interface simule les événements du DOM ; il ne remplace pas un essai visuel dans un navigateur.
+
+## Sources et assistance
+
+Sujet « IAS — Platform level Generation » et consignes de l'équipe enseignante. Les décors sont dessinés par le code, sans pack graphique externe. Une assistance IA est utilisée pour le cadrage, la rédaction et le développement.
