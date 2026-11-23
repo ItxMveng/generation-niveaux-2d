@@ -1,103 +1,73 @@
-# Génération procédurale de niveaux 2D
+# Les Sentiers — Génération de niveaux 2D
 
-Projet IAS — Victor Francis Itoua Mveng — travail individuel.
+Projet IAS · Victor Francis Itoua Mveng · Travail individuel.
 
-## Objectif
+Générer des niveaux de plateforme, vérifier leur accessibilité et améliorer leur structure par recherche locale. Une version jouable permet de les essayer.
 
-Construire des niveaux de plateforme 2D, vérifier leur accessibilité et comparer une méthode constructive à une recherche locale. Une petite version jouable permet aussi d'essayer les terrains.
+## Installation et lancement
 
-## Lancer le jeu
+Python 3.10 ou plus récent et un navigateur récent. Aucune bibliothèque Python externe. Node.js sert uniquement aux tests JavaScript.
 
-Python 3.10 ou plus récent et un navigateur récent. Aucune bibliothèque externe à installer.
+Sur GitHub, choisir **Code → Download ZIP**, extraire l’archive et ouvrir un terminal dans le dossier contenant `jouer.py`. Ou utiliser Git :
 
 ```sh
+git clone https://github.com/ItxMveng/generation-niveaux-2d.git
+cd generation-niveaux-2d
 python jouer.py --ouvrir
 ```
 
-La commande génère trois terrains améliorés et ouvre `sorties/jeu.html`. Ce fichier contient tout le jeu et fonctionne ensuite hors ligne. Sans `--ouvrir`, il suffit de l'ouvrir manuellement.
+Sous Windows, remplacer `python` par `py -3` si nécessaire. Sans `--ouvrir`, ouvrir manuellement `sorties/jeu.html`. Ce fichier contient le jeu et fonctionne hors ligne. Les sorties sont créées automatiquement et exclues de Git.
 
-- Flèches ou Q/D : avancer ; Espace ou flèche haute : sauter.
-- R : recommencer ; Échap : mettre en pause.
-- Rejoindre le drapeau orange pour terminer chaque traversée.
-- Trois éclats facultatifs à récupérer par terrain.
-- Boutons tactiles et aide pour afficher un chemin possible.
+Flèches ou Q/D : avancer. Espace : sauter. **E : sauter vers la droite avec une seule touche.** Maintenir une touche de saut permet de ressauter à l’atterrissage. R : recommencer. Échap : pause. Rejoindre le drapeau ; les éclats sont facultatifs. Boutons tactiles, aide de chemin et rythme détendu disponibles. La progression dure seulement le temps de la session.
 
-Les trois graines par défaut sont 42, 17 et 7. Pour choisir d'autres terrains : `python jouer.py --graines 42 17 --budget 200`. Une graine inaccessible est refusée avec un message, sans être remplacée silencieusement.
+## Choix et adaptations
 
-L’interface reprend la maquette « Les Sentiers » : accueil illustré, choix du niveau, partie, analyse, aide et réglages. Les cartes représentent les terrains exportés. L’analyse présente les mesures et l’historique réellement calculés en Python. Le rythme détendu ralentit les déplacements sans changer les règles de saut. Les préférences et les niveaux terminés sont conservés seulement pendant la session.
+- **Construction** : plateaux de 3 à 6 colonnes, trous bornés, écart de hauteur maximal d’une case entre surfaces solides successives, quatre colonnes protégées à chaque extrémité.
+- **Validation** : parcours en largeur sur `(x, y, montée restante)`, collisions et saut de deux cases par défaut. Un départ inaccessible est signalé, sans remplacement.
+- **Recherche locale** : modifier une à trois colonnes et conserver les gains stricts sur des terrains valides et accessibles. Le budget compte toutes les propositions. Un départ inaccessible n’est pas réparé.
+- **Ajouts** : jeu hors ligne, interface et analyse des résultats Python. Le jeu utilise les transitions du validateur ; les aides ne permettent pas de double saut.
 
-## Générer et analyser un terrain
+Le score vise 10 % de colonnes vides, 20 % de changements entre colonnes voisines solides et un plateau maximal de 30 % de la largeur ; poids : 35 %, 35 %, 30 %. Les formules sont dans `niveaux/evaluation.py`. Un terrain inaccessible n’a pas de score admissible.
+
+## Résultats et exemples
 
 ```sh
-python main.py --graine 42 --sortie sorties/avant.svg
-python main.py --graine 42 --ameliorer --budget 200 --graine-recherche 0 --sortie sorties/apres.svg
-python main.py --exemple --sortie sorties/exemple.svg
+python main.py --graine 105 --sortie sorties/avant.svg
+python main.py --graine 105 --ameliorer --sortie sorties/apres.svg
+python comparer.py --debut 100 --nombre 50 --budget 200
 ```
 
-Le terminal, le SVG et le JSON présentent le terrain, son chemin et ses mesures. Le JSON version 4 conserve les paramètres, la version du score, les rejets et l'historique des améliorations. Les sorties sont exclues de Git.
+Le rendu produit un SVG et un JSON ; la comparaison produit `sorties/comparaison/resultats.json` et `resultats.csv`. Protocole : mêmes 50 départs, grilles 40 × 12, saut de deux cases, 200 propositions, graine de recherche 0. Critères fixés avant l’expérience ; échecs conservés, scores comparés sur les mêmes départs accessibles.
 
-## Méthodes
+| Mesure | Construction | Après recherche |
+| --- | ---: | ---: |
+| Accessibilité | 50/50 | 50/50 |
+| Score moyen sur 100 | 61,22 | 97,89 |
+| Écart-type | 12,54 | 0,32 |
+| Diversité des profils | 0,683 | 0,670 |
+| Temps moyen, évaluation incluse | 0,64 ms | 59,18 ms au total |
 
-Le générateur construit des plateaux de 3 à 6 colonnes, parfois raccourcis à la fin, et des trous bornés. Les surfaces solides successives diffèrent d'au plus une case. Quatre colonnes plates sont réservées à chaque extrémité.
+Les 50 scores augmentent. La diversité est la proportion moyenne de colonnes différentes sur 1 225 paires, trous inclus. Les temps proviennent d’un seul passage et dépendent de la machine.
 
-Le validateur utilise un parcours en largeur sur des états `(x, y, montée restante)`. Le personnage occupe une case, marche au sol, monte pendant deux étapes par défaut, puis descend. En l'air, le déplacement horizontal vaut -1, 0 ou +1 case. Les blocs et leurs coins ne peuvent pas être traversés, et un nouveau saut exige un support. Le jeu utilise les transitions exportées par ce même validateur : ses déplacements ne reposent pas sur un second moteur physique.
+- **105** : deux trous séparés et quelques retouches ; choix d’une amélioration discrète. Limite : réception surélevée après le premier trou.
+- **117** : terrasses, troisième trou ajouté, plateau maximal réduit de 18 à 11 colonnes ; choix d’un cas intermédiaire. Limite : un saut supplémentaire peut être nécessaire.
+- **143** : plateau maximal réduit de 32 à 11 colonnes ; transformation visible. Limite : deux trous proches n’ont qu’une colonne d’appui entre eux.
 
-La recherche locale modifie une à trois colonnes centrales : monter, descendre, creuser ou combler. Elle conserve les extrémités, les limites de hauteur et de trous. Elle peut créer des plateaux plus courts que le générateur initial. Seuls les gains stricts de score sur des terrains accessibles sont acceptés. Le budget compte toutes les propositions. Le terrain initial doit être accessible.
+Pour les jouer : `python jouer.py --graines 105 117 143 --sortie sorties/selection.html`.
 
-## Évaluation et limites
-
-Le score `construction-v1` vise 10 % de colonnes sans sol, 20 % de changements parmi les paires de colonnes voisines solides et un plateau maximal d'au plus 30 % de la largeur. Les poids sont 35 %, 35 % et 30 %. Pour les deux premières composantes : `max(0, 1 - abs(valeur - cible) / cible)`. La dernière vaut 1 jusqu'à 30 %, puis décroît jusqu'à 0 pour un terrain entièrement plat. La somme pondérée est ramenée sur 100.
-
-L'accessibilité est obligatoire : le score final vaut `null` si aucun chemin n'existe. Ces cibles sont des choix de conception, pas une mesure du plaisir de jeu. Le profil ne décrit que la plateforme la plus haute de chaque colonne. Le modèle de déplacement n'a ni inertie ni accélération ; la recherche peut stagner et ne garantit pas un optimum global. La comparaison sur 50 graines est présentée ci-dessous.
-
-## Code et tests
-
-- `main.py`, `jouer.py` : commandes d'analyse et d'export du jeu.
-- `niveaux/` : grille, génération, parcours, évaluation, recherche, rendu et export.
-- `jeu/` : interface HTML/CSS et moteur JavaScript.
-- `tests/` : contrôles des règles, des scores et des déplacements.
+## Vérifications et suites possibles
 
 ```sh
-python -m unittest discover -s tests -v
+python -m unittest discover -s tests
 python jouer.py
 node tests/test_moteur.js sorties/jeu.html
 node tests/test_interface.js sorties/jeu.html
 ```
 
-Node.js sert uniquement aux deux tests JavaScript. Le jeu se lance sans Node. Le test d'interface simule les événements du DOM ; il ne remplace pas un essai visuel dans un navigateur.
+39 tests Python et tests JavaScript, dont 1 860 transitions sur les terrains par défaut. Les tests d’interface simulent le DOM ; ils ne valident pas le rendu visuel. Organisation : `niveaux/` pour les algorithmes, `jeu/` pour l’interface, `tests/` pour les contrôles.
+
+Le déplacement est discret, sans inertie ; la recherche peut stagner. Le score ne mesure pas le plaisir de jeu. Avec plus de temps, je répéterais les départs avec plusieurs graines de recherche, budgets et dimensions pour mesurer la stabilité. Je comparerais aussi les scores au taux de réussite, au nombre d’essais et aux avis de joueurs.
 
 ## Sources et assistance
 
-Sujet « IAS — Platform level Generation » et consignes de l'équipe enseignante. Les décors sont dessinés par le code, sans pack graphique externe. Une assistance IA est utilisée pour le cadrage, la rédaction et le développement.
-
-### Commandes de saut
-
-Espace, ↑ ou Z permettent de sauter ; maintenir la touche permet de ressauter à l’atterrissage. Un appui anticipé est conservé pendant 320 ms. E (ou le bouton tactile Saut ↗) déclenche un saut vers la droite et conserve cette direction pendant le vol, sauf si une flèche est utilisée. L’avance automatique cesse à l’atterrissage. Ces aides ne changent pas les transitions autorisées et ne permettent pas de double saut.
-
-## Comparaison des méthodes
-
-```sh
-python comparer.py --debut 100 --nombre 50 --budget 200
-```
-
-Les résultats détaillés sont enregistrés dans `sorties/comparaison/resultats.json` et `resultats.csv`. Les deux méthodes utilisent les mêmes 50 terrains de départ (graines 100 à 149), de 40 × 12 cases, avec un saut de deux cases. La recherche utilise 200 propositions et la graine 0. Les critères sont fixés avant l'expérience. Les départs inaccessibles sont conservés comme échecs, sans remplacement ; les scores sont comparés sur les mêmes départs accessibles.
-
-| Mesure | Construction | Après recherche |
-| --- | ---: | ---: |
-| Terrains accessibles | 50/50 | 50/50 |
-| Score moyen / 100 | 61,22 | 97,89 |
-| Écart-type des scores | 12,54 | 0,32 |
-| Diversité des profils | 0,683 | 0,670 |
-| Temps moyen par terrain, évaluation comprise | 0,64 ms | 59,18 ms au total |
-
-Les 50 scores augmentent, de 36,68 points en moyenne. La diversité est la proportion moyenne de colonnes différentes entre deux profils, trous inclus (1 225 paires). Elle baisse légèrement. Les temps viennent d'un seul passage sur la machine de développement et varient selon la machine. Le score optimisé n'est pas une mesure du plaisir de jeu. Une seule graine de recherche et une seule configuration ont été étudiées : ces résultats ne garantissent pas le même comportement partout.
-
-## Quelques niveaux retenus
-
-Les colonnes ci-dessous sont comptées de 1 à 40. Les exemples utilisent le budget 200 et la graine de recherche 0.
-
-- **105** : deux trous de deux colonnes, en 13–14 et 23–24, avec de larges appuis entre eux. Les changements de hauteur passent de 4 à 7. Ce niveau montre une amélioration discrète d’un terrain déjà bien noté (86,21 → 97,88). La réception après le premier trou est surélevée et le plateau final reste long.
-- **117** : des terrasses et un troisième trou ajouté en colonne 26. Le plateau maximal passe de 18 à 11 colonnes (60,12 → 97,81). Ce cas illustre une transformation intermédiaire, mais la coupure supplémentaire peut demander davantage d’attention au joueur.
-- **143** : un plateau initial de 32 colonnes, réduit à 11 au maximum après recherche (22,05 → 97,81). La transformation est visible ; les trous des colonnes 8 et 10 ne sont toutefois séparés que par une colonne solide. Un grand gain de score ne garantit donc pas un passage confortable.
-
-Pour reproduire un exemple : `python main.py --graine 105 --ameliorer --budget 200 --graine-recherche 0 --sortie sorties/graine-105.svg`. Retirer `--ameliorer` permet de voir le terrain initial. Pour jouer les trois : `python jouer.py --graines 105 117 143 --sortie sorties/selection.html`.
+Sujet « IAS — Platform level Generation », Anne-Gwenn Bosser, et consignes du module. Interface adaptée de ma maquette ; décors dessinés dans le projet. Une assistance IA est utilisée pour le cadrage, la rédaction et le développement. Les critères peuvent réduire la variété ; la sélection reste humaine. Le jeu ne collecte pas de données personnelles.
