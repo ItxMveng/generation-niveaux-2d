@@ -4,14 +4,16 @@ from html import escape
 
 from niveaux.grille import ARRIVEE, DEPART, SOL, Niveau
 from niveaux.parcours import Parcours
+from niveaux.evaluation import Evaluation
 
 
-def rendre_svg(niveau: Niveau, titre="Niveau de plateforme", parcours: Parcours | None = None):
+def rendre_svg(niveau: Niveau, titre="Niveau de plateforme", parcours: Parcours | None = None,
+               evaluation: Evaluation | None = None):
     taille = 28
     marge = 32
     haut = 100
     largeur = max(720, niveau.largeur * taille + 2 * marge)
-    hauteur = haut + niveau.hauteur * taille + 72
+    hauteur = haut + niveau.hauteur * taille + (116 if evaluation is not None else 72)
     elements = [
         f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {largeur} {hauteur}" role="img" aria-labelledby="titre description">',
         f'<title id="titre">{escape(titre)}</title>',
@@ -50,6 +52,13 @@ def rendre_svg(niveau: Niveau, titre="Niveau de plateforme", parcours: Parcours 
     elements.extend([
         f'<text x="32" y="{bas + 29}" font-size="12">D · Départ     A · Arrivée     ■ Sol</text>',
         f'<text x="32" y="{bas + 50}" font-size="11" fill="#60776f">{escape(statut)}</text>',
-        '</g></svg>',
     ])
+    if evaluation is not None:
+        score = f"{evaluation.score:.1f}/100" if evaluation.score is not None else "non admissible"
+        mesures = evaluation.mesures
+        elements.extend([
+            f'<text x="32" y="{bas + 73}" font-size="12" font-weight="600">Score de construction : {score}</text>',
+            f'<text x="32" y="{bas + 94}" font-size="11" fill="#60776f">Colonnes sans sol : {mesures.taux_trous:.1%} · Changements : {mesures.taux_changements:.1%} · Plateau maximal : {mesures.plateau_maximal} cases</text>',
+        ])
+    elements.append('</g></svg>')
     return "\n".join(elements)
