@@ -10,7 +10,7 @@ const ctx = new Proxy({}, { get: (_, nom) => nom === "createLinearGradient"
     assert.ok(args.filter(a=>typeof a==="number").every(Number.isFinite)); commandesDessin++;
   }, set:()=>true });
 class Element {
-  constructor(id="") {this.id=id;this.children=[];this.style={};this.attrs={};this.textContent="";this.hidden=false;}
+  constructor(id="") {this.classList={toggle(){}};this.id=id;this.children=[];this.style={};this.attrs={};this.textContent="";this.hidden=false;}
   setAttribute(n,v){this.attrs[n]=String(v);}
   append(e){this.children.push(e);}
   focus(){}
@@ -19,9 +19,11 @@ class Element {
   getContext(){return ctx;}
   setPointerCapture(){}
 }
-const get = id => {if(!elements.has(id))elements.set(id,new Element(id));return elements.get(id);};
+const get = id => {
+  if(id !== ".marque") assert.ok(html.includes(`id="${id}"`), `Élément absent du HTML : ${id}`);
+  if(!elements.has(id))elements.set(id,new Element(id));return elements.get(id);};
 get("donnees").textContent=data;get("progression").parentElement=new Element();
-const document = {getElementById:get,createElement:()=>new Element(),querySelector:get,
+const document = {getElementById:get,createElement:()=>new Element(),querySelector:get,body:new Element(),
   addEventListener:(nom,fn)=>{evenements[nom]=fn;},hidden:false};
 const window = {addEventListener:(nom,fn)=>{evenements[nom]=fn;}};
 const contexte = vm.createContext({document,window,devicePixelRatio:1,matchMedia:()=>({matches:false}),
@@ -31,6 +33,10 @@ vm.runInContext(fs.readFileSync("jeu/moteur.js","utf8")+"\n"+fs.readFileSync("je
 frame(horloge);
 function touche(type,key){evenements[type]({key,repeat:false,target:get("terrain"),preventDefault(){}});}
 function pas(){for(let i=0;i<5;i++){horloge+=29;frame(horloge);}}
+assert.equal(get("home").hidden,false);
+get("choisir").onclick();assert.equal(get("levels").hidden,false);
+get("niveaux").children[0].onclick();
+assert.equal(get("game").hidden,false);
 assert.equal(get("voile").hidden,false);
 get("action").onclick();assert.equal(get("voile").hidden,true);
 get("pause").onclick();assert.equal(get("voile").hidden,false);
@@ -55,6 +61,17 @@ for(let i=0;i<niveaux.length;i++) {
   assert.equal(get("fragments").textContent,`${n.fragments.length} / ${n.fragments.length}`);
   assert.equal(get("progression").parentElement.attrs["aria-valuenow"],"100");
 }
+get("nav-analysis").onclick();
+assert.equal(get("analysis").hidden,false);
+assert.equal(get("aSeed").textContent,niveaux[2].analyse.graine);
+assert.equal(get("aScore").textContent,niveaux[2].analyse.score.toFixed(1)+" / 100");
+assert.ok(get("historyChart").innerHTML.includes("<svg"));
+const essaisAvant=get("essais").textContent;
+touche("keydown","r");assert.equal(get("essais").textContent,essaisAvant);
+get("nav-settings").onclick();get("rythme").value="210";get("rythme").onchange();
+get("reducedMotion").checked=true;get("reducedMotion").onchange();
+get("largeText").checked=true;get("largeText").onchange();
+get("settingsBack").onclick();assert.equal(get("game").hidden,false);
 get("terrain").largeur=360;get("terrain").hauteur=330;observations.forEach(fn=>fn());pas();
 assert.ok(commandesDessin>100);
-console.log("Interface : départ, pause, reprise, aide, clavier, trois victoires et dessin à 360 px vérifiés (simulation DOM).");
+console.log("Interface : navigation, analyse exportée, réglages, clavier, trois victoires et dessin à 360 px vérifiés (simulation DOM).");

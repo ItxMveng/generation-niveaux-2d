@@ -1,6 +1,8 @@
 """Construire trois terrains et exporter un petit jeu jouable hors ligne."""
 
 import argparse
+from dataclasses import asdict
+from niveaux.evaluation import profil_surface
 from pathlib import Path
 import webbrowser
 
@@ -27,7 +29,16 @@ def main():
             parametres = Parametres(graine=graine)
             resultat = ameliorer(generer(parametres), parametres, budget=args.budget, graine=0)
             nom = noms[i] if i < len(noms) else f"Sentier {i + 1}"
-            terrains.append(preparer_niveau(resultat.niveau, nom))
+            terrain = preparer_niveau(resultat.niveau, nom)
+            terrain["analyse"] = {
+                "graine": graine, "score_initial": resultat.score_initial,
+                "score": resultat.evaluation.score,
+                "mesures": asdict(resultat.evaluation.mesures),
+                "budget": resultat.budget, "evaluations": resultat.evaluations,
+                "historique": resultat.historique,
+                "profil": profil_surface(resultat.niveau),
+            }
+            terrains.append(terrain)
     except ValueError as erreur:
         parser.error(f"Graine {graine} : {erreur}")
     args.sortie.parent.mkdir(parents=True, exist_ok=True)

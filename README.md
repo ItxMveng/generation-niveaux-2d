@@ -24,6 +24,8 @@ La commande génère trois terrains améliorés et ouvre `sorties/jeu.html`. Ce 
 
 Les trois graines par défaut sont 42, 17 et 7. Pour choisir d'autres terrains : `python jouer.py --graines 42 17 --budget 200`. Une graine inaccessible est refusée avec un message, sans être remplacée silencieusement.
 
+L’interface reprend la maquette « Les Sentiers » : accueil illustré, choix du niveau, partie, analyse, aide et réglages. Les cartes représentent les terrains exportés. L’analyse présente les mesures et l’historique réellement calculés en Python. Le rythme détendu ralentit les déplacements sans changer les règles de saut. Les préférences et les niveaux terminés sont conservés seulement pendant la session.
+
 ## Générer et analyser un terrain
 
 ```sh

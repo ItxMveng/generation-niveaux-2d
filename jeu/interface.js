@@ -7,7 +7,7 @@
   let index = 0, partie, precedent, ecoule = 0, essais = 1, joue = false, aide = false;
   let demandeSaut = false, phase = 0, derniere = 0;
   let camera = 0, largeur = 1000, hauteur = 390, actionVoile = () => {};
-  const pas = 145, reduit = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  let page = "home", pas = 145, reduit = matchMedia("(prefers-reduced-motion: reduce)").matches;
   const formatTemps = ms => `${Math.floor(ms / 60000)}:${String(Math.floor(ms / 1000) % 60).padStart(2, "0")}`;
 
   function message(texte) { $("message").textContent = texte; }
@@ -16,9 +16,15 @@
     $("badge").textContent = badge; $("titre-voile").textContent = titre;
     $("texte-voile").textContent = texte; $("action").textContent = bouton;
     $("voile").hidden = false; actionVoile = action;
+    $("bilan").hidden = badge !== "BIEN JOUÉ";
+    $("bilan-fragments").textContent = $("fragments").textContent;
+    $("bilan-temps").textContent = formatTemps(ecoule);
+    $("bilan-essais").textContent = essais;
+    if (page === "game") $("action").focus();
   }
   function commencer() { $("voile").hidden = true; joue = true; phase = 0; canvas.focus({preventScroll:true}); }
   function charger(i) {
+    afficherPage("game");
     index = i; partie = new Partie(niveaux[i]); precedent = [...partie.etat]; camera = 0;
     ecoule = 0; essais = 1; phase = 0;
     $("numero").textContent = `TRAVERSÉE ${i + 1} / ${niveaux.length}`;
@@ -41,7 +47,7 @@
     $("progression").style.width = `${taux}%`;
     $("progression").parentElement.setAttribute("aria-valuenow", Math.round(taux));
     [...$("niveaux").children].forEach((b, i) => {
-      b.textContent = `${termines.has(i) ? "✓" : String(i + 1).padStart(2, "0")}  ${niveaux[i].nom}`;
+      b.children[1].children[0].textContent = `${termines.has(i) ? "✓ " : ""}${niveaux[i].nom}`;
       b.setAttribute("aria-current", i === index ? "true" : "false");
     });
   }
@@ -56,16 +62,67 @@
     $("aide").textContent = aide ? "Masquer le chemin" : "Afficher le chemin";
     message(aide ? "La ligne montre un passage possible. Tu gardes le contrôle du personnage." : "À toi de trouver ta route.");
   };
-  document.querySelector(".marque").onclick = e => { e.preventDefault(); charger(0); };
+  function afficherPage(destination) {
+    if (page === "game" && destination !== "game") pause();
+    page = destination; touches.clear(); demandeSaut = false;
+    for (const nom of ["home", "levels", "game", "analysis", "help", "settings"]) {
+      $(nom).hidden = nom !== page; $(nom).classList.toggle("active", nom === page);
+      if (nom !== "game") $("nav-" + nom).setAttribute("aria-current", nom === page ? "page" : "false");
+    }
+    if (page === "analysis") analyser();
+    if (page === "game") redimensionner();
+    (page === "game" && !$("voile").hidden ? $("action") : $(page)).focus({preventScroll:true});
+  }
+  function analyser() {
+    const n = niveaux[index], a = n.analyse;
+    $("analyse-nom").textContent = n.nom;
+    if (!a) { $("aRecherche").textContent = "Analyse indisponible pour cet export."; return; }
+    const valeurs = {aSeed:a.graine,aWidth:n.grille[0].length,aHoles:a.mesures.colonnes_vides,
+      aHeight:a.mesures.changements,aFlat:a.mesures.plateau_maximal,aAccessible:"Oui",
+      aBefore:a.score_initial.toFixed(1)+" / 100",aScore:a.score.toFixed(1)+" / 100"};
+    for (const [id,v] of Object.entries(valeurs)) $(id).textContent = v;
+    $("aMeter").style.width = a.score + "%";
+    $("aRecherche").textContent = `${a.budget} propositions, ${a.evaluations} évaluations et ${a.historique.length-1} améliorations acceptées.`;
+    $("analysisChart").innerHTML = miniature(n);
+    const x = t => 35 + 345*t/Math.max(1,a.budget), y = v => 160-1.4*v;
+    let trace = `M ${x(0)} ${y(a.score_initial)}`;
+    for(const [t,v] of a.historique.slice(1)) trace += ` H ${x(t)} V ${y(v)}`;
+    trace += ` H ${x(a.budget)}`;
+    $("historyChart").innerHTML = `<svg viewBox="0 0 400 190" role="img" aria-label="Évolution du score de construction"><path d="M35 20V160H380" fill="none" stroke="#95aaa4"/><path d="${trace}" fill="none" stroke="#edc575" stroke-width="3"/><g fill="#b8c9c2" font-size="12"><text x="3" y="25">100</text><text x="18" y="164">0</text><text x="35" y="180">0</text><text x="350" y="180">${a.budget}</text></g></svg>`;
+  }
+  function miniature(n) {
+    const w=n.grille[0].length, h=n.grille.length;
+    let formes = "";
+    n.grille.forEach((ligne,y)=>[...ligne].forEach((c,x)=>{
+      if(c==="#") formes += `<rect x="${x}" y="${y}" width="1" height="1" fill="${y===0||n.grille[y-1][x]!=="#"?"#85b88a":"#385c50"}"/>`;
+      if(c==="D"||c==="A") formes += `<rect x="${x}" y="${y}" width="1" height="1" fill="${c==="D"?"#e8e7c5":"#edb361"}"/>`;
+    }));
+    return `<svg viewBox="0 0 ${w} ${h}" role="img" aria-label="Aperçu du terrain"><rect width="${w}" height="${h}" fill="#173742"/>${formes}</svg>`;
+  }
+  document.querySelector(".marque").onclick = e => { e.preventDefault(); afficherPage("home"); };
+  for(const nom of ["home","levels","analysis","help","settings"]) $("nav-"+nom).onclick=()=>afficherPage(nom);
+  for(const id of ["choisir","retour-niveaux","helpPlay"]) $(id).onclick=()=>afficherPage("levels");
+  for(const id of ["analysisBack","settingsBack"]) $(id).onclick=()=>afficherPage("game");
+  $("voir-analyse").onclick=()=>afficherPage("analysis");
+  $("startAdventure").onclick=()=>{charger(0);commencer();};
+  $("nombre-niveaux").textContent = `${niveaux.length} niveaux`;
+  $("rythme").onchange=()=>{pas=Number($("rythme").value)===210?210:145;phase=0;};
+  $("reducedMotion").checked=reduit;
+  $("reducedMotion").onchange=()=>{reduit=$("reducedMotion").checked;document.body.classList.toggle("reducedMotion",reduit);};
+  $("largeText").onchange=()=>document.body.classList.toggle("largeText",$("largeText").checked);
   window.addEventListener("keydown", e => {
+    if (page !== "game" || e.target.closest("input,select,textarea")) return;
+    if (e.key === "Tab" && !$("voile").hidden) {
+      e.preventDefault(); (document.activeElement === $("action") ? $("retour-niveaux") : $("action")).focus(); return;
+    }
     if (e.target.closest("button,a") && [" ", "Enter"].includes(e.key)) return;
     const k = e.key.toLowerCase();
-    if (["arrowleft","arrowright","arrowup"," ","q","a","d","r","escape"].includes(k)) e.preventDefault();
+    if (["arrowleft","arrowright","arrowup"," ","q","a","d","r","escape","z","p"].includes(k)) e.preventDefault();
     if (k === "r" && !e.repeat) return recommencer();
-    if (k === "escape") return pause();
+    if ((k === "escape" || k === "p") && !e.repeat) return pause();
     if (!joue) return;
     touches.add(k);
-    if ([" ","arrowup"].includes(k) && !e.repeat) demandeSaut = true;
+    if ([" ","arrowup","z"].includes(k) && !e.repeat) demandeSaut = true;
   });
   window.addEventListener("keyup", e => touches.delete(e.key.toLowerCase()));
   window.addEventListener("blur", () => { touches.clear(); pause(); });
@@ -80,7 +137,7 @@
     bouton.onpointerup = bouton.onpointercancel = bouton.onlostpointercapture = () => touches.delete(touche);
   }
   function redimensionner() {
-    const r = canvas.getBoundingClientRect(); largeur = r.width; hauteur = r.height;
+    const r = canvas.getBoundingClientRect(); if (!r.width || !r.height) return; largeur = r.width; hauteur = r.height;
     const dpr = Math.min(devicePixelRatio || 1, 2); canvas.width = Math.round(largeur*dpr); canvas.height = Math.round(hauteur*dpr);
     ctx.setTransform(dpr,0,0,dpr,0,0);
   }
@@ -162,10 +219,16 @@
         }
       }
     }
-    $("temps").textContent=formatTemps(ecoule);dessiner(t);requestAnimationFrame(boucle);
+    $("temps").textContent=formatTemps(ecoule);if(page === "game") dessiner(t);requestAnimationFrame(boucle);
   }
   niveaux.forEach((n, i) => {
-    const b=document.createElement("button");b.onclick=()=>charger(i);$("niveaux").append(b);
+    const b=document.createElement("button");b.className="level";
+    const apercu=document.createElement("span");apercu.className="thumb";apercu.innerHTML=miniature(n);
+    const titre=document.createElement("strong");titre.textContent=n.nom;
+    const detail=document.createElement("small");detail.textContent=`${n.grille[0].length} colonnes · ${n.fragments.length} éclats`;
+    const contenu=document.createElement("span");contenu.className="detail";contenu.append(titre);contenu.append(detail);
+    b.append(apercu);b.append(contenu);
+    b.onclick=()=>charger(i);$("niveaux").append(b);
   });
-  charger(0);redimensionner();requestAnimationFrame(boucle);
+  charger(0);afficherPage("home");redimensionner();requestAnimationFrame(boucle);
 })();
