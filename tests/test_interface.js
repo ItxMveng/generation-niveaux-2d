@@ -44,6 +44,13 @@ assert.equal(get("titre-voile").textContent,"Le sentier peut attendre.");
 get("action").onclick();get("aide").onclick();assert.equal(get("aide").attrs["aria-pressed"],"true");
 get("recommencer").onclick();assert.equal(get("essais").textContent,2);
 evenements.blur();assert.equal(get("voile").hidden,false);
+get("niveaux").children[0].onclick();get("action").onclick();
+touche("keydown","e");touche("keyup","e");pas();
+assert.ok(Number(get("progression").parentElement.attrs["aria-valuenow"])>0,"E avance pendant le saut");
+get("recommencer").onclick();
+get("sauter-droite").onpointerdown({pointerId:1,preventDefault(){}});
+get("sauter-droite").onpointerup();pas();
+assert.ok(Number(get("progression").parentElement.attrs["aria-valuenow"])>0,"Le bouton tactile avance pendant le saut");
 // Rejouer chaque solution via les vrais gestionnaires clavier et la boucle d'affichage.
 for(let i=0;i<niveaux.length;i++) {
   get("niveaux").children[i].onclick();get("action").onclick();

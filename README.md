@@ -69,3 +69,7 @@ Node.js sert uniquement aux deux tests JavaScript. Le jeu se lance sans Node. Le
 ## Sources et assistance
 
 Sujet « IAS — Platform level Generation » et consignes de l'équipe enseignante. Les décors sont dessinés par le code, sans pack graphique externe. Une assistance IA est utilisée pour le cadrage, la rédaction et le développement.
+
+### Commandes de saut
+
+Espace, ↑ ou Z permettent de sauter ; maintenir la touche permet de ressauter à l’atterrissage. Un appui anticipé est conservé pendant 320 ms. E (ou le bouton tactile Saut ↗) déclenche un saut vers la droite et conserve cette direction pendant le vol, sauf si une flèche est utilisée. L’avance automatique cesse à l’atterrissage. Ces aides ne changent pas les transitions autorisées et ne permettent pas de double saut.

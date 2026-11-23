@@ -5,14 +5,15 @@
   const canvas = $("terrain"), ctx = canvas.getContext("2d");
   const touches = new Set(), termines = new Set();
   let index = 0, partie, precedent, ecoule = 0, essais = 1, joue = false, aide = false;
-  let demandeSaut = false, phase = 0, derniere = 0;
+  const commandeSaut = new CommandesSaut();
+  let phase = 0, derniere = 0;
   let camera = 0, largeur = 1000, hauteur = 390, actionVoile = () => {};
   let page = "home", pas = 145, reduit = matchMedia("(prefers-reduced-motion: reduce)").matches;
   const formatTemps = ms => `${Math.floor(ms / 60000)}:${String(Math.floor(ms / 1000) % 60).padStart(2, "0")}`;
 
   function message(texte) { $("message").textContent = texte; }
   function voile(badge, titre, texte, bouton, action) {
-    joue = false; touches.clear(); demandeSaut = false;
+    joue = false; touches.clear(); commandeSaut.reinitialiser();
     $("badge").textContent = badge; $("titre-voile").textContent = titre;
     $("texte-voile").textContent = texte; $("action").textContent = bouton;
     $("voile").hidden = false; actionVoile = action;
@@ -31,10 +32,11 @@
     $("nom").textContent = niveaux[i].nom;
     actualiser();
     voile("À TOI DE JOUER", niveaux[i].nom,
-      "Rejoins le drapeau orange. Flèches ou Q/D pour avancer, Espace pour sauter.",
+      "Rejoins le drapeau orange. E : sauter vers la droite avec une seule touche. Flèches et Espace : commandes classiques.",
       "Commencer la traversée →", commencer);
   }
   function recommencer() {
+    touches.clear(); commandeSaut.reinitialiser();
     essais++; partie.recommencer(); precedent = [...partie.etat]; phase = 0;
     actualiser(); commencer();
     message("Nouveau départ. Observe les trous et prépare ton saut avant le bord.");
@@ -64,7 +66,7 @@
   };
   function afficherPage(destination) {
     if (page === "game" && destination !== "game") pause();
-    page = destination; touches.clear(); demandeSaut = false;
+    page = destination; touches.clear(); commandeSaut.reinitialiser();
     for (const nom of ["home", "levels", "game", "analysis", "help", "settings"]) {
       $(nom).hidden = nom !== page; $(nom).classList.toggle("active", nom === page);
       if (nom !== "game") $("nav-" + nom).setAttribute("aria-current", nom === page ? "page" : "false");
@@ -117,22 +119,22 @@
     }
     if (e.target.closest("button,a") && [" ", "Enter"].includes(e.key)) return;
     const k = e.key.toLowerCase();
-    if (["arrowleft","arrowright","arrowup"," ","q","a","d","r","escape","z","p"].includes(k)) e.preventDefault();
+    if (["arrowleft","arrowright","arrowup"," ","q","a","d","r","escape","z","p","e"].includes(k)) e.preventDefault();
     if (k === "r" && !e.repeat) return recommencer();
     if ((k === "escape" || k === "p") && !e.repeat) return pause();
     if (!joue) return;
     touches.add(k);
-    if ([" ","arrowup","z"].includes(k) && !e.repeat) demandeSaut = true;
+    if ([" ","arrowup","z","e"].includes(k) && !e.repeat) commandeSaut.demander(ecoule, k === "e");
   });
   window.addEventListener("keyup", e => touches.delete(e.key.toLowerCase()));
   window.addEventListener("blur", () => { touches.clear(); pause(); });
   document.addEventListener("visibilitychange", () => { if (document.hidden) pause(); });
-  for (const [id, touche] of [["gauche","arrowleft"],["droite","arrowright"],["sauter"," "]]) {
+  for (const [id, touche] of [["gauche","arrowleft"],["droite","arrowright"],["sauter"," "],["sauter-droite","e"]]) {
     const bouton = $(id);
     bouton.onpointerdown = e => {
       e.preventDefault(); bouton.setPointerCapture(e.pointerId);
       if (!joue) return;
-      touches.add(touche); if (touche === " ") demandeSaut = true;
+      touches.add(touche); if (touche === " " || touche === "e") commandeSaut.demander(ecoule, touche === "e");
     };
     bouton.onpointerup = bouton.onpointercancel = bouton.onlostpointercapture = () => touches.delete(touche);
   }
@@ -204,8 +206,9 @@
         phase-=pas;precedent=[...partie.etat];
         const gauche=touches.has("arrowleft")||touches.has("q")||touches.has("a");
         const droite=touches.has("arrowright")||touches.has("d");
-        partie.avancer(Number(droite)-Number(gauche),demandeSaut);
-        demandeSaut=false;actualiser();
+        commandeSaut.avancer(partie, Number(droite)-Number(gauche),
+          touches.has(" ") || touches.has("arrowup") || touches.has("z"), touches.has("e"), ecoule);
+        actualiser();
         if(partie.perdu) {
           voile("ON RÉESSAIE ?","Un peu trop loin…","Le sentier est toujours là. Repars du début et essaie un autre saut.","Recommencer →",recommencer);
           message("Tu es tombé. Le bouton Afficher le chemin peut t’aider.");

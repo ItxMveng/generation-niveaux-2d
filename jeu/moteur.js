@@ -40,4 +40,27 @@ class Partie {
   }
 }
 
-if (typeof module !== "undefined") module.exports = { Partie };
+// Une commande anticipée reste disponible 320 ms ; aucun saut supplémentaire en l'air.
+class CommandesSaut {
+  constructor() { this.reinitialiser(); }
+  reinitialiser() { this.expiration = -1; this.versDroite = false; this.enVol = false; }
+  demander(temps, versDroite = false) {
+    this.expiration = temps + 320; this.versDroite = versDroite;
+  }
+  avancer(partie, direction, maintenu, droiteMaintenue, temps) {
+    const auSol = Boolean(partie.niveau.sols[partie.etat.join()]);
+    if (auSol) this.enVol = false;
+    const attente = temps <= this.expiration;
+    const saut = auSol && (attente || maintenu || droiteMaintenue);
+    const automatique = this.enVol || (saut && (droiteMaintenue || (attente && this.versDroite)));
+    const y = partie.etat[1];
+    const bouge = partie.avancer(direction || (automatique ? 1 : 0), saut);
+    if (saut && bouge && partie.etat[1] < y) {
+      this.expiration = -1; this.versDroite = false; this.enVol = automatique;
+    }
+    if (partie.niveau.sols[partie.etat.join()]) this.enVol = false;
+    return bouge;
+  }
+}
+
+if (typeof module !== "undefined") module.exports = { Partie, CommandesSaut };

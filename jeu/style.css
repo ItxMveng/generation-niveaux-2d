@@ -10,3 +10,5 @@
 
 /* Les aperçus gardent le rapport du terrain ; le bilan reste défilable sur mobile. */
 .level .thumb,.level .detail{display:block}.level .detail strong{display:block;margin-bottom:7px}.level .detail small{display:block;line-height:1.5}.overlay{overflow-y:auto}.dialog{max-height:100%;overflow-y:auto}.summary strong{display:block;color:var(--gold);font-size:23px}.home .intro{position:relative;z-index:1}
+
+.touch{flex-wrap:wrap}.touch .group{gap:8px}.touch button{min-width:54px}.touch button.jumpbtn{min-width:78px;font-size:14px}
