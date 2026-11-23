@@ -48,7 +48,7 @@ La recherche locale modifie une à trois colonnes centrales : monter, descendre,
 
 Le score `construction-v1` vise 10 % de colonnes sans sol, 20 % de changements parmi les paires de colonnes voisines solides et un plateau maximal d'au plus 30 % de la largeur. Les poids sont 35 %, 35 % et 30 %. Pour les deux premières composantes : `max(0, 1 - abs(valeur - cible) / cible)`. La dernière vaut 1 jusqu'à 30 %, puis décroît jusqu'à 0 pour un terrain entièrement plat. La somme pondérée est ramenée sur 100.
 
-L'accessibilité est obligatoire : le score final vaut `null` si aucun chemin n'existe. Ces cibles sont des choix de conception, pas une mesure du plaisir de jeu. Le profil ne décrit que la plateforme la plus haute de chaque colonne. Le modèle de déplacement n'a ni inertie ni accélération ; la recherche peut stagner et ne garantit pas un optimum global. La comparaison sur plusieurs graines reste à réaliser.
+L'accessibilité est obligatoire : le score final vaut `null` si aucun chemin n'existe. Ces cibles sont des choix de conception, pas une mesure du plaisir de jeu. Le profil ne décrit que la plateforme la plus haute de chaque colonne. Le modèle de déplacement n'a ni inertie ni accélération ; la recherche peut stagner et ne garantit pas un optimum global. La comparaison sur 50 graines est présentée ci-dessous.
 
 ## Code et tests
 
@@ -73,3 +73,21 @@ Sujet « IAS — Platform level Generation » et consignes de l'équipe enseigna
 ### Commandes de saut
 
 Espace, ↑ ou Z permettent de sauter ; maintenir la touche permet de ressauter à l’atterrissage. Un appui anticipé est conservé pendant 320 ms. E (ou le bouton tactile Saut ↗) déclenche un saut vers la droite et conserve cette direction pendant le vol, sauf si une flèche est utilisée. L’avance automatique cesse à l’atterrissage. Ces aides ne changent pas les transitions autorisées et ne permettent pas de double saut.
+
+## Comparaison des méthodes
+
+```sh
+python comparer.py --debut 100 --nombre 50 --budget 200
+```
+
+Les résultats détaillés sont enregistrés dans `sorties/comparaison/resultats.json` et `resultats.csv`. Les deux méthodes utilisent les mêmes 50 terrains de départ (graines 100 à 149), de 40 × 12 cases, avec un saut de deux cases. La recherche utilise 200 propositions et la graine 0. Les critères sont fixés avant l'expérience. Les départs inaccessibles sont conservés comme échecs, sans remplacement ; les scores sont comparés sur les mêmes départs accessibles.
+
+| Mesure | Construction | Après recherche |
+| --- | ---: | ---: |
+| Terrains accessibles | 50/50 | 50/50 |
+| Score moyen / 100 | 61,22 | 97,89 |
+| Écart-type des scores | 12,54 | 0,32 |
+| Diversité des profils | 0,683 | 0,670 |
+| Temps moyen par terrain, évaluation comprise | 0,64 ms | 59,18 ms au total |
+
+Les 50 scores augmentent, de 36,68 points en moyenne. La diversité est la proportion moyenne de colonnes différentes entre deux profils, trous inclus (1 225 paires). Elle baisse légèrement. Les temps viennent d'un seul passage sur la machine de développement et varient selon la machine. Le score optimisé n'est pas une mesure du plaisir de jeu. Une seule graine de recherche et une seule configuration ont été étudiées : ces résultats ne garantissent pas le même comportement partout.
